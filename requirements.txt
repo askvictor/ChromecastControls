@@ -1,0 +1,2 @@
+cec==0.2.7
+PyChromecast==4.1.0

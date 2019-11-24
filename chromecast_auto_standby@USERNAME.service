@@ -1,0 +1,13 @@
+[Unit]
+Description=Chromecast Auto Standby
+After=network-online.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+User=%i
+ExecStart=/usr/bin/python3 /usr/local/bin/chromecast_auto_standby.py
+
+[Install]
+WantedBy=multi-user.target
