@@ -4,12 +4,51 @@ import pychromecast
 import threading
 import cec
 import time
+import argparse
 
-# Configurable options
-TIMEOUT = 300  # timeout in seconds
-CEC_DEV_ADDRS = [5]  # the device addresses of the devices you want to power off
-                     # if only one device, it still needs to be in brackets (a list)
-CHROMECAST_NAME = "Living Room TV"  # the name of the Chromecast to monitor
+parser = argparse.ArgumentParser(description='Auto-switches off TV/Hifi equipment (via CEC) if a particular Chromecast is inactive/idle.')
+parser.add_argument('--setup', action='store_true', help='Initial Setup')
+parser.add_argument('--chromecast', default='Living Room TV', help='Name of Chromecast to monitor (default: "Living Room TV"')
+parser.add_argument('--cec', type=int, default=5, help='Number of CEC device to monitor (default: 5)')
+parser.add_argument('--timeout', type=int, default=300, help='Time (seconds) between Chromecast going idle and device power down (default: 300 (=5min))')
+
+args = parser.parse_args()
+
+if args.setup:
+    print("Getting CEC Devices")
+    cec.init()
+    cec_devs = []
+    all_devs = cec.list_devices()
+    [ print(i, all_devs[i].osd_string) for i in all_devs ]
+    cec_dev = input("Select a CEC Device to power down (don't select Chromecast here): ")
+    while True:
+        try:
+            if int(cec_dev) in all_devs:
+                break
+        except ValueError:
+            pass
+        cec_dev = input("Type the number of a listed device: ")
+    #TODO - allow multi devices
+    cec_devs.append(cec_dev)
+
+    print("\nGetting Chromecasts on network")
+    chromecasts = pychromecast.get_chromecasts()
+    [ print(i, cc.device.friendly_name) for i, cc in enumerate(chromecasts) ]
+    chromecast = input("Select a Chromecast device to monitor for idle: ")
+    while True:
+        try:
+            if int(chromecast) < len(chromecasts) and int(chromecast) >= 0:
+                break
+        except ValueError:
+            pass
+        chromecast = input("Type the number of a listed device: ")
+    cc = chromecasts[int(chromecast)].device.friendly_name
+    print(f'Options: --cec {cec_devs[0]} --chromecast "{cc}"')
+    exit()
+
+CHROMECAST_NAME = args.chromecast
+TIMEOUT = args.timeout
+CEC_DEV_ADDRS = [args.cec]
 
 #TODO - split config into seperate file
 
