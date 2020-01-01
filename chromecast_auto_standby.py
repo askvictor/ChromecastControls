@@ -10,6 +10,8 @@ parser = argparse.ArgumentParser(description='Auto-switches off TV/Hifi equipmen
 parser.add_argument('--setup', action='store_true', help='Initial Setup')
 parser.add_argument('--chromecast', default='Living Room TV', help='Name of Chromecast to monitor (default: "Living Room TV"')
 parser.add_argument('--cec', type=int, default=5, help='Number of CEC device to monitor (default: 5)')
+parser.add_argument('--volume', dest='volume', action='store_true', help='Send CEC Volume commands when Chromecast changes volume')
+parser.set_defaults(volume=False)
 parser.add_argument('--timeout', type=int, default=300, help='Time (seconds) between Chromecast going idle and device power down (default: 300 (=5min))')
 
 args = parser.parse_args()
@@ -49,8 +51,13 @@ if args.setup:
 CHROMECAST_NAME = args.chromecast
 TIMEOUT = args.timeout
 CEC_DEV_ADDRS = [args.cec]
+ 
+# send CEC volume changes when Chromecast's volume has changed
+# this fixes the annoyance that CC won't change volume for media
+# with surround sound. Doesn't work once CC's internal volume counter
+# has reached its maximum
+MIRROR_VOLUME = args.volume
 
-#TODO - split config into seperate file
 
 class StatusListener:
     def __init__(self, cast, cec_devs, timeout=300):
@@ -60,6 +67,15 @@ class StatusListener:
         self.cec_devs = cec_devs
 
     def new_cast_status(self, status):
+        if MIRROR_VOLUME:
+            if status.volume_level > self.volume_level:  #volume up
+                print("vol up")
+                cec.volume_up()
+            elif status.volume_level < self.volume_level:  #volume down
+                print("vol down")
+                cec.volume_down()
+            self.volume_level = status.volume_level
+
         if status.status_text:
             print('app connection: ', status.status_text)
             self.cancel_timer()
@@ -108,4 +124,3 @@ print('Listening for Chromecast events...\n\n')
 while True:
     time.sleep(0.2)
     #input('Listening for Chromecast events...\n\n')
-
