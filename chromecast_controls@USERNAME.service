@@ -7,7 +7,7 @@ Type=simple
 Restart=always
 RestartSec=10
 User=%i
-ExecStart=/usr/bin/python3 /usr/local/bin/chromecast_auto_standby.py
+ExecStart=/usr/bin/python3 /usr/local/bin/chromecast_controls.py
 
 [Install]
 WantedBy=multi-user.target
