@@ -1,5 +1,5 @@
 [Unit]
-Description=Chromecast Auto Standby
+Description=Chromecast Controls
 After=network-online.target
 
 [Service]
